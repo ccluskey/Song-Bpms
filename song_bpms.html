@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+
+<script type="text/javascript" src="spotify_api_controller.js"></script>
+
+<script>
+window.onload = function() {
+	var dropdown = document.getElementById('playlists');
+	var table = $('#playlist_data').DataTable();
+
+	// Listen to change events on the playlists dropdown
+	dropdown.addEventListener('change', (event) => {
+		// Get items from the selected playlist.  Clear the table first
+		table.clear().draw();
+		getAuthToken(function(token) {
+			getPlaylistItems(token, event.currentTarget.value, updateTable);
+		});
+	});
+
+	// Populate the dropdown with the users playlists
+	getAuthToken(function(token) {
+		getUsersPlaylists(token, function(response) {
+			if (response != null && response instanceof Array) {
+				var dropdown = document.getElementById('playlists');
+				for (var i = 0; i < response.length; i++) {
+					var option = document.createElement('option');
+					option.innerHTML = response[i].name;
+					option.value = response[i].id;
+					dropdown.appendChild(option);
+				}
+			}
+		});
+	});
+
+	function updateTable(new_rows) {
+		if (new_rows != null && new_rows instanceof Array) {
+			for (var i = 0; i < new_rows.length; i++) {
+				cur_row = new_rows[i];
+				table.row.add([cur_row.title, cur_row.artist, cur_row.bpm, cur_row.time, "<a href=" + cur_row.link + " target=_blank>" + cur_row.link + "</a>"]);
+			}
+			table.draw(false);
+		}
+	}
+}
+</script>
+</head>
+<body>
+	<h1 id="page_title">Spotify Playlist BPMs</h1>
+	<label for="playlists">Choose a playlist:</label>
+
+	<select name="playlists" id="playlists">
+	<option value="default">[playlist_name]</option>
+	</select>
+	<table id="playlist_data">
+		<thead id="playlist_table_header">
+			<tr>
+				<th>Title</th>
+				<th>Artist</th>
+				<th>BPM</th>
+				<th>Time Signature</th>
+				<th>Link</th>
+			</tr>
+		</thead>
+		<tbody id="playlist_table_body">
+			 <!-- JS code will fill this table with data -->
+		</tbody>
+	</table>
+</body>
+</html>	
